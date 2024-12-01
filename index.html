@@ -118,7 +118,12 @@
             transform: translateX(calc(-10vw - 100%)) rotate(0deg) translateY(0);
         }
         50% {
-            transform: translateX(50vw) rotate(90deg) translateY(40%);
+            @media (min-width: 500px) {
+                transform: translateX(50vw) rotate(90deg) translateY(30%);
+            }
+            @media (max-width: 499px) {
+                transform: translateX(60vw) rotate(90deg);
+            }
         }
 
         100% {
