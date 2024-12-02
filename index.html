@@ -2,7 +2,6 @@
 <html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="style.css">
 <body>
 
 <style>
@@ -35,41 +34,37 @@
     let metrovOtVas = document.getElementById("metrovOtVas")
 
     async function getLocation(){
-        let t = localStorage.getItem("t")
-        if(t && (Date.now() - t < 10 * 60 * 1000)){
-            let dist = localStorage.getItem("dist")
-            if(dist > 1000){
-                dist /= 1000
-                metrovOtVas.innerText = getDeclension(Math.trunc(dist), "километр")+" от вас."
-            }else{
-                metrovOtVas.innerText = getDeclension(Math.trunc(dist), "метр")+" от вас."
-            }
-            return
-        }
+        let dist = 300
 
-        try {
+        let t = localStorage.getItem("t")
+        if(t && (Date.now() - t < 10 * 60 * 1000)) // Get Distance from cache
+            dist = localStorage.getItem("dist")
+        else try { // Get Distance from API
             let resp = await (await fetch('https://ipinfo.io/json')).json()
             const [lat, lon] = resp.loc.split(',');
             const [targetLat, targetLon] = [63.7935, 74.5257]
-            let dist = calculateDistance(lat, lon, targetLat, targetLon).toFixed(3)
-            dist *= 1000
 
+            // Calc distance
+            dist = calculateDistance(lat, lon, targetLat, targetLon).toFixed(3) * 1000;
+
+            // Caching
             localStorage.setItem("t", Date.now())
             localStorage.setItem("dist", dist)
-
-            if(dist > 1000){
-                dist /= 1000
-                metrovOtVas.innerText = getDeclension(Math.trunc(dist), "километр")+" от вас."
-            }else{
-                metrovOtVas.innerText = getDeclension(Math.trunc(dist), "метр")+" от вас."
-            }
         } catch (e){
             console.error("Ooops, error: ", e)
         }
+
+        let decl
+        if(dist > 1000)
+            decl = getDeclension(Math.trunc(dist / 1000), "километр")
+        else
+            decl = getDeclension(Math.trunc(dist), "метр")
+
+        metrovOtVas.innerText = decl+" от вас."
     }
 
     function calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371; // Радиус Земли в километрах
+        const R = 6378; // Радиус Земли в километрах
         const dLat = (lat2 - lat1) * Math.PI / 180;
         const dLon = (lon2 - lon1) * Math.PI / 180;
         const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
@@ -111,7 +106,6 @@
     getLocation()
 </script>
 
-<div class="gradient-disk"></div>
 <style>
     @keyframes gradientSlide {
         0% {
@@ -121,6 +115,7 @@
             @media (min-width: 500px) {
                 transform: translateX(50vw) rotate(90deg) translateY(30%);
             }
+
             @media (max-width: 499px) {
                 transform: translateX(60vw) rotate(90deg);
             }
@@ -134,16 +129,16 @@
     .gradient-disk {
         z-index: -1;
         position: fixed;
-        width: 550px;
-        height: 850px;
+        width: 520px;
+        height: 650px;
         top: 10%;
         border-radius: 50%;
-        opacity: 0.2;
+        opacity: 0.1;
         background: radial-gradient(circle, #1C2B36, #243847, #314E5C, #5D8D9B);
         animation: gradientSlide 10s infinite linear;
     }
 </style>
-
+<div class="gradient-disk"></div>
 
 </body>
 </html>
